@@ -9,6 +9,11 @@ const response = new Future((resolve) => {
 
 log(response, '\n', response.v);
 log(await response);
+response.then((v) => {
+  log(
+    `this resolves with ${v} on the next event loop\n after previous await, right before next await`
+  );
+});
 log(response.v);
 debugger;
 clear();

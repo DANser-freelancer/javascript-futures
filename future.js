@@ -1,4 +1,5 @@
 export default class Future extends Promise {
+  #source = null;
   constructor(fn, { signal } = {}) {
     let resolve, reject;
     super((res, rej) => {
@@ -8,7 +9,10 @@ export default class Future extends Promise {
 
     if (!(signal instanceof AbortSignal)) {
       const control = new AbortController();
-      Object.defineProperty(this, 'abort', { value: control.abort.bind(control) });
+      Object.defineProperty(this, 'abort', {
+        value: control.abort.bind(control),
+        configurable: true
+      });
       signal = control.signal;
     }
 
@@ -19,20 +23,28 @@ export default class Future extends Promise {
             fn(res, rej, signal);
           });
 
-    source
+    this.#source = source
       .then((val) => {
         Object.defineProperty(this, 'v', {
           value: val,
           configurable: false
         });
         resolve(val);
+        return val;
       })
       .catch((err) => {
-        Object.defineProperty(this, 'v', {
-          value: err,
-          configurable: false
+        Object.defineProperties(this, {
+          v: {
+            value: err,
+            configurable: false
+          },
+          abort: {
+            value: null,
+            configurable: false
+          }
         });
         reject(err);
+        return err;
       });
 
     Object.defineProperty(this, 'v', {
@@ -40,6 +52,20 @@ export default class Future extends Promise {
       enumerable: true,
       configurable: true
     });
+
+    return this;
+  }
+
+  then(fn) {
+    return this.#source.then(fn);
+  }
+
+  catch(fn) {
+    return this.#source.catch(fn);
+  }
+
+  finally(fn) {
+    return this.#source.finally(fn);
   }
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "@danscode/futures",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.1",
   "type": "module",
-  "description": "Implementation of a Future object",
+  "description": "Implementation of a Future object for vanilla javascript",
   "main": "future.js",
   "scripts": {
     "test": "node examples.js"
@@ -21,5 +21,13 @@
     "LICENSE"
   ],
   "author": "[Dan](https://github.com/DANser-freelancer) dans.channels.contact@gmail.com",
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DANser-freelancer/javascript-futures.git"
+  },
+  "homepage": "https://github.com/DANser-freelancer/javascript-enum-model/blob/main/raw.md#overview",
+  "bugs": {
+    "url": "https://github.com/DANser-freelancer/javascript-futures/issues"
+  }
 }
