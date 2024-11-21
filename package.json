@@ -1,0 +1,25 @@
+{
+  "name": "@danscode/futures",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Implementation of a Future object",
+  "main": "future.js",
+  "scripts": {
+    "test": "node examples.js"
+  },
+  "keywords": [
+    "futures",
+    "future",
+    "javascript",
+    "ES2022",
+    "promises",
+    "async"
+  ],
+  "files": [
+    "future.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": "[Dan](https://github.com/DANser-freelancer) dans.channels.contact@gmail.com",
+  "license": "BSD-3-Clause"
+}
