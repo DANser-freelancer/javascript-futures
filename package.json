@@ -1,6 +1,6 @@
 {
   "name": "@danscode/futures",
-  "version": "0.1.0-alpha.1",
+  "version": "1.0.0",
   "type": "module",
   "description": "Implementation of a Future object for vanilla javascript",
   "main": "future.js",

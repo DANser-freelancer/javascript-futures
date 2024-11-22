@@ -1,5 +1,18 @@
+/**
+ * A `Promise`-like object.
+ * @param {null | any} v - initially `null`, **readonly** value, replaced with `Promise` result or error
+ * @param {undefined | null | Function} abort - `undefined` or method of auto-generated `AbortController`
+ * @example
+ * const future = new Future((resolve, reject, signal)=>{
+ *  // some code
+ * });
+ */
 export default class Future extends Promise {
-  #source = null;
+  /**
+   * @param {Function} fn - synchronous or asynchronous executor function
+   * @param {Object} [options] - an object of optional args
+   * @param {AbortSignal} [options.signal] - event emitter used to cancel long running promises
+   */
   constructor(fn, { signal } = {}) {
     let resolve, reject;
     super((res, rej) => {
@@ -7,7 +20,12 @@ export default class Future extends Promise {
       reject = rej;
     });
 
-    if (!(signal instanceof AbortSignal)) {
+    if (signal instanceof AbortSignal) {
+      Object.defineProperty(this, 'abort', {
+        value: undefined,
+        configurable: true
+      });
+    } else {
       const control = new AbortController();
       Object.defineProperty(this, 'abort', {
         value: control.abort.bind(control),
@@ -23,11 +41,17 @@ export default class Future extends Promise {
             fn(res, rej, signal);
           });
 
-    this.#source = source
+    source
       .then((val) => {
-        Object.defineProperty(this, 'v', {
-          value: val,
-          configurable: false
+        Object.defineProperties(this, {
+          v: {
+            value: val,
+            configurable: false
+          },
+          abort: {
+            value: null,
+            configurable: false
+          }
         });
         resolve(val);
         return val;
@@ -52,20 +76,6 @@ export default class Future extends Promise {
       enumerable: true,
       configurable: true
     });
-
-    return this;
-  }
-
-  then(fn) {
-    return this.#source.then(fn);
-  }
-
-  catch(fn) {
-    return this.#source.catch(fn);
-  }
-
-  finally(fn) {
-    return this.#source.finally(fn);
   }
 }
 

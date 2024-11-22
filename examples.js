@@ -43,7 +43,11 @@ const asyncResponse = new Future(async () => {
 });
 
 log(asyncResponse, '\n', asyncResponse.v);
-log(await asyncResponse);
+log(
+  await asyncResponse.catch((e) => {
+    log(e);
+  })
+);
 log(asyncResponse.v);
 debugger;
 clear();
@@ -89,9 +93,14 @@ debugger;
 clear();
 
 const cancelledFuture = new Future((res, rej, signal) => {
-  signal.addEventListener('abort', () => {
-    rej(signal.reason);
-  });
+  signal.addEventListener(
+    'abort',
+    () => {
+      rej(signal.reason);
+    },
+    { once: true }
+  );
+  // never resolves
   setTimeout(() => {
     res(200);
   }, 1500);
@@ -104,4 +113,38 @@ try {
   console.log(e);
 }
 
+debugger;
+clear();
+
+function fileAsync(path) {
+  return new Promise((res) => {
+    setTimeout(() => {
+      res(path);
+    }, 1000);
+  });
+}
+
+function numberAsync(num) {
+  return new Promise((res) => {
+    setTimeout(() => {
+      res(num);
+    }, 1000);
+  });
+}
+
+async function longTask() {
+  const file1 = fileAsync('bunny.png');
+  const file2 = fileAsync('carrot.png');
+  let number = numberAsync(1);
+  // long setup
+  for (let i = 0; i < 100000; i++) {
+    const x = i * 3;
+  }
+
+  // actual use of data
+  number = await number;
+  return (await file1) + (await file2) + number;
+}
+
+log(await longTask());
 debugger;
