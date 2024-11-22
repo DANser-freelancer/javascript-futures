@@ -7,7 +7,7 @@ A `Future` extends `Promise` and partially unwraps itself once it is `settled`.
 
 The initialization is very similar to a `Promise` and has some QoL improvements.  
 A `Future` extends `Promise` so it can be identified as one.  
-A `Future` inherits all the `Promise` methods (e.g. `.then()` or `.catch()`) just fine.
+A `Future` inherits all the `Promise` methods (e.g. `.then()` or `.catch()`) just fine.  
 You can grab a test file [here](https://github.com/DANser-freelancer/javascript-futures/blob/main/examples.js).
 
 ## Initialization and Syntax
@@ -134,3 +134,7 @@ try {
   console.log(e);
 }
 ```
+
+# Authors
+
+[Dan](https://github.com/DANser-freelancer): Code
