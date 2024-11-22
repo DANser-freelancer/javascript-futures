@@ -117,7 +117,7 @@ A `Future` also facilitates the use of `AbortSignal` in two ways:
    - this makes sure the `AbortSignal` is always passed into executors
    - and exposes the `.abort()` method on the `Future` itself
 
-<a name="signal-example"></a>
+<a id="signal-example"></a>
 Here is an example of how to use it:
 
 ```javascript
