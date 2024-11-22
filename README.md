@@ -8,6 +8,7 @@ A `Future` extends `Promise` and partially unwraps itself once it is `settled`.
 The initialization is very similar to a `Promise` and has some QoL improvements.  
 A `Future` extends `Promise` so it can be identified as one.  
 A `Future` inherits all the `Promise` methods (e.g. `.then()` or `.catch()`) just fine.
+You can grab a test file [here](https://github.com/DANser-freelancer/javascript-futures/blob/main/examples.js).
 
 ## Initialization and Syntax
 
@@ -31,16 +32,16 @@ Some handles will be passed to the executor, it depends on the kind of function 
 - These args are always sent, they can be called anything
 - Any other args are not available (since the executor is called from a `Future`)
 - You can default assign any extra args, as usual `(a, b, c, d = 55) => {}`
-- **Regular** executor are wrapped in a `Promise`
-  - you can manually `reject()` or `resolve()` them
-- **Async** executor implicitly return a `Promise`
+- **Regular** executor is wrapped in a `Promise`
+  - you can manually `reject()` or `resolve()` it
+- **Async** executor implicitly returns a `Promise`
   - you cannot manually settle the async `Promise`
-  - they only get a `signal` arg
+  - it only receives a `signal` arg
 
 A `Future` accepts an options object:
 
-1. `signal` accepts or creates an `AbortSignal` object.
-   - it is passed to both kinds of executor
+1. `signal` accepts an `AbortSignal` object
+   - it is passed to both kinds of executors
 
 ## Structure
 
@@ -55,13 +56,13 @@ A `Future` has 2 exposed, **readonly** properties:
 
 2. `abort()` is a reference to the aforementioned method of an `AbortController`
 
-   - if no `signal` was passed to the `Future` constructor, it it present but `undefined`
+   - if no `signal` was passed to the `Future` constructor, it is present but `undefined`
    - once the `Future` is **settled**, it is `null` (for memory cleanup)
    - see [abort example](#signal-example)
 
 ## Usage
 
-The main use case is to achieve some performance increase by avoiding frequent use of `await`.  
+The main use case is to achieve some performance gain by avoiding frequent use of `await`.  
 `Promise` always has to be unwrapped with `await` or `.then()` otherwise the value is inaccessible.  
 `await` schedules a microtask just like `.then()`:
 
