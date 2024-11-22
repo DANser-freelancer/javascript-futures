@@ -2,6 +2,8 @@
  * A `Promise`-like object.
  * @param {null | any} v - initially `null`, **readonly** value, replaced with `Promise` result or error
  * @param {undefined | null | Function} abort - `undefined` or method of auto-generated `AbortController`
+ * @param {string} state - **mimicks** internal `[[PromiseState]]` property
+ * @param {boolean} isPending - returns `false` for "resolved" or "rejected" `Future`
  * @example
  * const future = new Future((resolve, reject, signal)=>{
  *  // some code
@@ -54,6 +56,7 @@ export default class Future extends Promise {
           }
         });
         resolve(val);
+        this.#state = 'fulfilled';
         return val;
       })
       .catch((err) => {
@@ -68,6 +71,7 @@ export default class Future extends Promise {
           }
         });
         reject(err);
+        this.#state = 'rejected';
         return err;
       });
 
@@ -76,6 +80,17 @@ export default class Future extends Promise {
       enumerable: true,
       configurable: true
     });
+  }
+
+  // private to be ironclad for dependent methods
+  #state = 'pending';
+
+  get state() {
+    return this.#state;
+  }
+
+  get isPending() {
+    return this.#state === 'pending';
   }
 }
 

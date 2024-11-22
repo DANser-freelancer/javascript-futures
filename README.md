@@ -6,8 +6,11 @@ A `Future` extends `Promise` and partially unwraps itself once it is `settled`.
 # Overview
 
 The initialization is very similar to a `Promise` and has some QoL improvements.  
-A `Future` extends `Promise` so it can be identified as one.  
-A `Future` inherits all the `Promise` methods (e.g. `.then()` or `.catch()`) just fine.  
+A `Future` extends `Promise` for 2 reasons:
+
+1. to inherit all the `Promise` methods (e.g. `.then()` or `.catch()`), even from future ES specs
+2. they are very similar concepts and so `new Future(() => {}) instanceof Promise` should be `true`
+
 You can grab a test file [here](https://github.com/DANser-freelancer/javascript-futures/blob/main/examples.js).
 
 ## Initialization and Syntax
@@ -45,7 +48,7 @@ A `Future` accepts an options object:
 
 ## Structure
 
-A `Future` has 2 exposed, **readonly** properties:
+A `Future` has exposed, **readonly** properties:
 
 1. `.v` is the **settled** value of the underlying `Promise`
 
@@ -57,8 +60,13 @@ A `Future` has 2 exposed, **readonly** properties:
 2. `abort()` is a reference to the aforementioned method of an `AbortController`
 
    - if no `signal` was passed to the `Future` constructor, it is present but `undefined`
+     - this prevents accidental abort of other dependants when you only meant to abort the one `Future`
+     - also `AbortSignal` has no reference to `AbortController.abort()`, so I can't grab it
    - once the `Future` is **settled**, it is `null` (for memory cleanup)
    - see [abort example](#signal-example)
+
+3. `.state` **mimicks** internal `[[PromiseState]]` property
+4. `.isPending` returns `false` for "resolved" or "rejected" `Future`
 
 ## Usage
 
@@ -89,7 +97,7 @@ async function longTask() {
 
 I find several problems with this approach, specifically in more complicated production grade code.
 
-1. we still can only get the value out by `awaiting` again
+1. we still can only get the value out by `awaiting` **again**
    - bad in case we need to use `const file1` more than once
 2. we could reassign `let number` to the once `awaited` value
    - but it's very easy to reassign it somewhere else by accident
@@ -100,7 +108,7 @@ I find several problems with this approach, specifically in more complicated pro
      - especially if those secondary `Promise`s are best awaited at different points in the function
 
 `Future` removes the need for tricks.  
-Once a `Future` is created, you only need to `await` it at the very last moment.  
+Once a `Future` is created, you only need to `await` it **once** to receive the value.  
 Any later access is direct and **synchronous** via `<future>.v`.  
 A `Future` also facilitates the use of `AbortSignal` in two ways:
 
