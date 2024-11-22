@@ -136,13 +136,14 @@ async function longTask() {
   const file1 = fileAsync('bunny.png');
   const file2 = fileAsync('carrot.png');
   let number = numberAsync(1);
-  // long setup
+  // avoid awaiting in a loop
+  number = await number;
+  // long action
   for (let i = 0; i < 100000; i++) {
-    const x = i * 3;
+    number = i * 3;
   }
 
   // actual use of data
-  number = await number;
   return (await file1) + (await file2) + number;
 }
 
