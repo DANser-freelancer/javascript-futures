@@ -1,7 +1,8 @@
 # About
 
 This is an implementation of a `Future` object for vanilla javascript.  
-A `Future` extends `Promise` and partially unwraps itself once it is `settled`.
+A `Future` extends `Promise` and partially unwraps itself once it is `settled`.  
+It improves the reusability of `Promise` objects, without the need to reassign variables or re-`await` it.
 
 # Overview
 
