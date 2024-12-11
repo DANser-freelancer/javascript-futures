@@ -7,29 +7,33 @@ const response = new Future((resolve) => {
   }, 1500);
 });
 
-log(response, '\n', response.v);
+log(response, '\n', response.value);
+// value is auto-unwrapped the first time a Future resolves
 log(await response);
-response.then((v) => {
+response.then((value) => {
   log(
-    `this resolves with ${v} on the next event loop\n after previous await, right before next await`
+    `this resolves with ${value} on the next event loop\n after previous await, right before next await`
   );
 });
-log(response.v);
+// don't have to await again
+log(response.value);
+log(response.value);
+log(response.value);
 debugger;
 clear();
 
 const problematicResponse = new Future((_resolve, reject) => {
-  // throw new Error(`Your HDD exploded`);
+  throw new Error(`Your HDD exploded`);
   setTimeout(() => {
     reject(404);
   }, 1500);
 });
 
-log(problematicResponse, '\n', problematicResponse.v);
+log(problematicResponse, '\n', problematicResponse.value);
 try {
   log(await problematicResponse);
 } catch (e) {
-  log(problematicResponse.v === e ? e : 'different');
+  log(problematicResponse.value === e ? e : 'different');
 }
 debugger;
 clear();
@@ -42,13 +46,13 @@ const asyncResponse = new Future(async () => {
   });
 });
 
-log(asyncResponse, '\n', asyncResponse.v);
+log(asyncResponse, '\n', asyncResponse.value);
 log(
   await asyncResponse.catch((e) => {
     log(e);
   })
 );
-log(asyncResponse.v);
+log(asyncResponse.value);
 debugger;
 clear();
 
@@ -56,17 +60,19 @@ const problematicAsyncResponse = new Future(async () => {
   throw new Error(`I/O problems, check your wifi adapter`);
 });
 
-log(problematicAsyncResponse, '\n', problematicAsyncResponse.v);
+log(problematicAsyncResponse, '\n', problematicAsyncResponse.value);
 try {
   log(await problematicAsyncResponse);
 } catch (_e) {
-  log(problematicAsyncResponse.v);
+  log(problematicAsyncResponse.value);
 }
 debugger;
 clear();
 
 async function fetchData(signal) {
-  const response = await fetch('https://jsonplaceholder.typicode.com/todos/1', { signal });
+  const response = await fetch('https://jsonplaceholder.typicode.com/todos/1', {
+    signal
+  });
   return await response.json();
 }
 

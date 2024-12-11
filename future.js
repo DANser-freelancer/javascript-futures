@@ -1,8 +1,9 @@
+const _async_proto = Object.getPrototypeOf(async () => {});
 /**
  * A `Promise`-like object.
- * @param {null | any} v - initially `null`, **readonly** value, replaced with `Promise` result or error
+ * @param {null | any} value - initially `null`, **readonly** value, replaced with `Promise` result or error
  * @param {undefined | null | Function} abort - `undefined` or method of auto-generated `AbortController`
- * @param {string} state - **mimicks** internal `[[PromiseState]]` property
+ * @param {string} state - mimicks internal slot `[[PromiseState]]`
  * @param {boolean} isPending - returns `false` for "resolved" or "rejected" `Future`
  * @example
  * const future = new Future((resolve, reject, signal)=>{
@@ -13,7 +14,7 @@ export default class Future extends Promise {
   /**
    * @param {Function} fn - synchronous or asynchronous executor function
    * @param {Object} [options] - an object of optional args
-   * @param {AbortSignal} [options.signal] - event emitter used to cancel long running promises
+   * @param {AbortSignal} [options.signal] - event emitter, used to cancel long running promises
    */
   constructor(fn, { signal } = {}) {
     let resolve, reject;
@@ -37,7 +38,7 @@ export default class Future extends Promise {
     }
 
     const source =
-      fn.constructor.name === 'AsyncFunction'
+      fn instanceof _async_proto
         ? fn(signal)
         : new Promise((res, rej) => {
             fn(res, rej, signal);
@@ -46,7 +47,7 @@ export default class Future extends Promise {
     source
       .then((val) => {
         Object.defineProperties(this, {
-          v: {
+          value: {
             value: val,
             configurable: false
           },
@@ -61,7 +62,7 @@ export default class Future extends Promise {
       })
       .catch((err) => {
         Object.defineProperties(this, {
-          v: {
+          value: {
             value: err,
             configurable: false
           },
@@ -75,7 +76,7 @@ export default class Future extends Promise {
         return err;
       });
 
-    Object.defineProperty(this, 'v', {
+    Object.defineProperty(this, 'value', {
       value: null,
       enumerable: true,
       configurable: true

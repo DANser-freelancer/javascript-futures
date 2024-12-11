@@ -9,9 +9,13 @@ It improves the reusability of `Promise` objects, without the need to reassign v
 The initialization is very similar to a `Promise` and has some QoL improvements.  
 A `Future` extends `Promise` for 2 reasons:
 
-1. to inherit all the `Promise` methods (e.g. `.then()` or `.catch()`), even from future ES specs
-2. they are very similar concepts and so `new Future(() => {}) instanceof Promise` should be `true`
+1. to inherit all the `Promise` methods (e.g. `.then()` or `.catch()`), even from future ES specs.
+2. because they are very similar concepts.
 
+> [!IMPORTANT]  
+> Requires ES2022 and ESM imports.
+
+Available to install via `npm i @danscode/futures` or `deno install npm:@danscode/futures`.  
 You can grab a test file [here](https://github.com/DANser-freelancer/javascript-futures/blob/main/examples.js).
 
 ## Initialization and Syntax
@@ -49,34 +53,67 @@ A `Future` accepts an options object:
 
 ## Structure
 
-A `Future` has exposed, **readonly** properties:
+A `Future` has exposed, **readonly** properties (the object itself remains extensible):
 
-1. `.v` is the **settled** value of the underlying `Promise`
+|     Name     | Description                                                             |
+| :----------: | :---------------------------------------------------------------------- |
+|   `.value`   | is the **settled** value of the underlying `Promise`                    |
+|  `abort()`   | is a reference to the method of an `AbortController`                    |
+|   `.state`   | mimicks internal slot `[[PromiseState]]`                                |
+| `.isPending` | returns `false` for <ins>resolved</ins> or <ins>rejected</ins> `Future` |
 
-   - initially `null`
-   - if **resolved** it is the resolved value
-   - if **rejected** it is the rejected value
-   - if **thrown** it is the error object
+#### Details:
 
-2. `abort()` is a reference to the aforementioned method of an `AbortController`
+<details>
+<summary><b>value</b></summary>
 
-   - if no `signal` was passed to the `Future` constructor, it is present but `undefined`
-     - this prevents accidental abort of other dependants when you only meant to abort the one `Future`
-     - also `AbortSignal` has no reference to `AbortController.abort()`, so I can't grab it
-   - once the `Future` is **settled**, it is `null` (for memory cleanup)
-   - see [abort example](#signal-example)
+- initially `null`
+- if <ins>resolved</ins> it is the resolved value
+- if <ins>rejected</ins> it is the rejected value
+- if <ins>thrown</ins> it is the error object
+</details>
 
-3. `.state` **mimicks** internal `[[PromiseState]]` property
-4. `.isPending` returns `false` for "resolved" or "rejected" `Future`
+<details>
+<summary><b>abort</b></summary>
+
+- if no `signal` was passed to the `Future` constructor, it is present but `undefined`.
+  - this prevents accidental abort of other dependants when you only meant to abort the one `Future`;
+  - also `AbortSignal` has no reference to `AbortController.abort()`, so I can't grab it;
+- once the `Future` is <ins>settled</ins>, it is `null` (for memory cleanup).
+- see [abort example](#signal-example)
+</details>
 
 ## Usage
 
 The main use case is to achieve some performance gain by avoiding frequent use of `await`.  
-`Promise` always has to be unwrapped with `await` or `.then()` otherwise the value is inaccessible.  
-`await` schedules a microtask just like `.then()`:
+In other words it's like a `const data = new Promise()` with automatic unwrapping.  
+`Promise` always has to be unwrapped (even if **already resolved**) with `await` or `.then()` otherwise the value is inaccessible.  
+But `await` schedules a <ins>microtask</ins> just like `.then()`:
 
-1. this means every `await` surrenders this iteration of the event loop, because a `microtask` is only executed between iterations of the event loop.
-2. this also means that an `async` function will be frozen untill it resolves its first `await` and then the next, and the next...
+1. this means every `await` surrenders this iteration of the event loop, because a `microtask` is only <ins>executed between iterations</ins> of the event loop.
+2. this also means that an `async` function will be **frozen** untill it <ins>resolves</ins> its first `await` and then the next, and the next...
+
+This is an example of a busy program with the hot path in red:  
+_The following diagram implies that promises might also call/contain long tasks_
+
+```mermaid
+flowchart LR
+    NAME["Event Loop (simplified)"]
+    stack@{ shape: lin-cyl, label: "Check Call Stack" }
+    stack--- checkT{"Has a task"}
+    checkT--- |Yes| busyT@{shape: processes, label: "Execute code..."}
+    checkT--- |No| mTstack@{ shape: lin-cyl, label: "Check Microtask Queue" }
+    busyT-- "Build the stack up and down" ---stack
+    mTstack--- checkmT{"Has a microtask"}-.-x |Yes| busyT
+
+  %% Highlight the edges in the hot path
+    linkStyle 0,1,3 stroke:#ff1f1f,stroke-width:5px
+  %% cold path
+    linkStyle 2,4 stroke:#3464ff,stroke-width:2px
+```
+
+As you can see, every time you have to `await`, your code takes a [passing loop](https://en.wikipedia.org/wiki/Passing_loop).  
+It will only execute after the **entire** call stack has been emptied.
 
 There is one trick to `await` the value at the very last moment, letting the function start other `Promise`s and complete some synchronous setup.
 
@@ -98,20 +135,20 @@ async function longTask() {
 
 I find several problems with this approach, specifically in more complicated production grade code.
 
-1. we still can only get the value out by `awaiting` **again**
-   - bad in case we need to use `const file1` more than once
-2. we could reassign `let number` to the once `awaited` value
-   - but it's very easy to reassign it somewhere else by accident
-3. we could start all `Promise`s with `Promise.all()`
-   - but now it's another `Promise` which has to be unwrapped with an `await`
-     - and possibly destructured into more variables
-   - and it doesn't work if there are more `async` tasks dependent on the result of some initial `Promise`s
-     - especially if those secondary `Promise`s are best awaited at different points in the function
+1. We still can only get the value out by `awaiting` **again**.
+   - bad in case we need to use `const file1` more than once;
+2. We could reassign `let number` to the once `awaited` value.
+   - but it's very easy to reassign it somewhere else by accident;
+3. We could start all `Promise`s with `Promise.all()`.
+   - but now it's another `Promise` which has to be unwrapped with an `await`;
+     - and possibly destructured into more variables.
+   - it doesn't work if there are more `async` tasks dependent on the result of some initial `Promise`s;
+     - especially if those secondary `Promise`s are best awaited at different points in the function.
 
 `Future` removes the need for tricks.  
 Once a `Future` is created, you only need to `await` it **once** to receive the value.  
-Any later access is direct and **synchronous** via `<future>.v`.  
-A `Future` also facilitates the use of `AbortSignal` in two ways:
+Any later access is direct and **synchronous** via `<future>.value`.  
+A `Future` also integrates with `AbortSignal` in two ways:
 
 1. you can pass an `AbortController.signal` object in the `Future` constructor options
 2. or an `AbortController` will be created
@@ -144,6 +181,15 @@ try {
 }
 ```
 
-# Authors
+# Contributors
 
-[Dan](https://github.com/DANser-freelancer): Code
+[Dan](https://github.com/DANser-freelancer): Code author
+
+### Changelog
+
+<details>
+<summary>1.1.2 -> 2.0.0</summary>
+
+- improved natural/derived **async** function detection
+- changed `<future>.v` to `<future>.value`
+</details>
