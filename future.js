@@ -15,8 +15,9 @@ export default class Future extends Promise {
    * @param {Function} fn - synchronous or asynchronous executor function
    * @param {Object} [options] - an object of optional args
    * @param {AbortSignal} [options.signal] - event emitter, used to cancel long running promises
+   * @param {*} [rest] - any additional args to pass to the executor
    */
-  constructor(fn, { signal } = {}) {
+  constructor(fn, { signal } = {}, ...rest) {
     let resolve, reject;
     super((res, rej) => {
       resolve = res;
@@ -39,9 +40,9 @@ export default class Future extends Promise {
 
     const source =
       fn instanceof _async_proto
-        ? fn(signal)
+        ? fn(signal, ...rest)
         : new Promise((res, rej) => {
-            fn(res, rej, signal);
+            fn(res, rej, signal, ...rest);
           });
 
     source

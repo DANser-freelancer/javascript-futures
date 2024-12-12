@@ -24,32 +24,29 @@ The accepted function is run immediately, and a `Future` is returned.
 A `Future` accepts both **regular** and **async** executor functions.
 
 ```javascript
-const futuro = new Future((resolve, reject, signal) => {
+const futuro = new Future((resolve, reject, signal, ...) => {
   /*your code*/
 });
 ```
 
 ```javascript
-const futuroAsincrono = new Future(async (signal) => {
+const futuroAsincrono = new Future(async (signal, ...) => {
   /*your code*/
 });
 ```
 
 Some handles will be passed to the executor, it depends on the kind of function used as executor:
 
-- These args are always sent, they can be called anything
-- Any other args are not available (since the executor is called from a `Future`)
-- You can default assign any extra args, as usual `(a, b, c, d = 55) => {}`
-- **Regular** executor is wrapped in a `Promise`
-  - you can manually `reject()` or `resolve()` it
-- **Async** executor implicitly returns a `Promise`
-  - you cannot manually settle the async `Promise`
-  - it only receives a `signal` arg
+- These args are always sent, they can be called anything.
+- You can pass any extra args to the executor like so `new Future(executor, undefined, a, b, c, ...)`.
+- **Regular** executor is wrapped in a `Promise` and you can manually `reject()` or `resolve()` it.
+- **Async** executor implicitly returns a `Promise` so you cannot manually <ins>settle</ins> the async `Promise`.
 
 A `Future` accepts an options object:
 
-1. `signal` accepts an `AbortSignal` object
-   - it is passed to both kinds of executors
+|   Name   | Description                                                     |
+| :------: | :-------------------------------------------------------------- |
+| `signal` | accepts an `AbortSignal` object (is always passed to executors) |
 
 ## Structure
 
@@ -86,15 +83,15 @@ A `Future` has exposed, **readonly** properties (the object itself remains exten
 ## Usage
 
 The main use case is to achieve some performance gain by avoiding frequent use of `await`.  
-In other words it's like a `const data = new Promise()` with automatic unwrapping.  
+In other words it's like a `let data = new Promise()` with more secure automatic unwrapping.  
 `Promise` always has to be unwrapped (even if **already resolved**) with `await` or `.then()` otherwise the value is inaccessible.  
-But `await` schedules a <ins>microtask</ins> just like `.then()`:
-
-1. this means every `await` surrenders this iteration of the event loop, because a `microtask` is only <ins>executed between iterations</ins> of the event loop.
-2. this also means that an `async` function will be **frozen** untill it <ins>resolves</ins> its first `await` and then the next, and the next...
+But `await` schedules a <ins>microtask</ins> just like `.then()`.  
+This means every `await` surrenders this iteration of the event loop, because a `microtask` is only <ins>executed between iterations</ins> of the event loop.  
+Also an `async` function will be **frozen** untill it <ins>resolves</ins> its first `await` and then the next, and the next...
 
 This is an example of a busy program with the hot path in red:  
-_The following diagram implies that promises might also call/contain long tasks_
+_The following diagram implies that promises might also call/contain long tasks_  
+_(made with mermaid markdown)_
 
 ```mermaid
 flowchart LR

@@ -38,13 +38,14 @@ try {
 debugger;
 clear();
 
-const asyncResponse = new Future(async () => {
+const asResFunc = async (_, catColor, catAge) => {
   return await new Promise((resolve) => {
     setTimeout(() => {
-      resolve(200);
+      resolve({ status: 200, catColor, catAge });
     }, 1500);
   });
-});
+};
+const asyncResponse = new Future(asResFunc, {}, 'green-ish blue', Infinity);
 
 log(asyncResponse, '\n', asyncResponse.value);
 log(
