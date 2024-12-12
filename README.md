@@ -38,7 +38,7 @@ const futuroAsincrono = new Future(async (signal, ...) => {
 Some handles will be passed to the executor, it depends on the kind of function used as executor:
 
 - These args are always sent, they can be called anything.
-- You can pass any extra args to the executor like so `new Future(executor, undefined, a, b, c, ...)`.
+- You can pass any extra args to the executor like so `new Future(executor, 0, a, b, c, ...)`.
 - **Regular** executor is wrapped in a `Promise` and you can manually `reject()` or `resolve()` it.
 - **Async** executor implicitly returns a `Promise` so you cannot manually <ins>settle</ins> the async `Promise`.
 
@@ -90,10 +90,11 @@ This means every `await` surrenders this iteration of the event loop, because a 
 Also an `async` function will be **frozen** untill it <ins>resolves</ins> its first `await` and then the next, and the next...
 
 This is an example of a busy program with the hot path in red:  
-_The following diagram implies that promises might also call/contain long tasks_  
-_(made with mermaid markdown)_
+_The following diagram implies that promises might also call/contain long tasks_
 
 ```mermaid
+%% if you see this text try https://mermaid.live/
+
 flowchart LR
     NAME["Event Loop (simplified)"]
     stack@{ shape: lin-cyl, label: "Check Call Stack" }
@@ -130,27 +131,25 @@ async function longTask() {
 }
 ```
 
-I find several problems with this approach, specifically in more complicated production grade code.
+I find several problems with this approach, specifically in more complicated production grade code:
 
 1. We still can only get the value out by `awaiting` **again**.
-   - bad in case we need to use `const file1` more than once;
+   - what if we need to use `const file1` more than once?
 2. We could reassign `let number` to the once `awaited` value.
-   - but it's very easy to reassign it somewhere else by accident;
-3. We could start all `Promise`s with `Promise.all()`.
-   - but now it's another `Promise` which has to be unwrapped with an `await`;
-     - and possibly destructured into more variables.
-   - it doesn't work if there are more `async` tasks dependent on the result of some initial `Promise`s;
-     - especially if those secondary `Promise`s are best awaited at different points in the function.
+   - very easy to reassign it somewhere else by accident.
+3. We could start all `Promise`s with `Promise.all()` which still has to be unwrapped with an `await`.
+   - and possibly destructured into more variables;
+   - what if there are more `Promise`s dependent on earlier `Promises`?
+   - what if `Promises` are best awaited at different points in the function?
 
-`Future` removes the need for tricks.  
-Once a `Future` is created, you only need to `await` it **once** to receive the value.  
+`Future` removes the need for tricks, you only need to `await` it **once** to receive the value.  
 Any later access is direct and **synchronous** via `<future>.value`.  
 A `Future` also integrates with `AbortSignal` in two ways:
 
-1. you can pass an `AbortController.signal` object in the `Future` constructor options
-2. or an `AbortController` will be created
-   - this makes sure the `AbortSignal` is always passed into executors
-   - and exposes the `.abort()` method on the `Future` itself
+1. You can pass an `AbortController.signal` object in the `Future` constructor options.
+2. Or an `AbortController` will be created.
+   - this makes sure the `AbortSignal` is always passed into executors;
+   - and exposes the `.abort()` method on the `Future` itself.
 
 <a id="signal-example"></a>
 Here is an example of how to use it:

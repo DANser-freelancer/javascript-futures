@@ -38,12 +38,11 @@ export default class Future extends Promise {
       signal = control.signal;
     }
 
-    const source =
-      Object.getPrototypeOf(fn) === _async_proto
-        ? fn(signal, ...rest)
-        : new Promise((res, rej) => {
-            fn(res, rej, signal, ...rest);
-          });
+    const source = Object.prototype.isPrototypeOf.call(_async_proto, fn)
+      ? fn(signal, ...rest)
+      : new Promise((res, rej) => {
+          fn(res, rej, signal, ...rest);
+        });
 
     source
       .then((val) => {
