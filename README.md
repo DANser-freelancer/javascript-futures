@@ -44,15 +44,15 @@ Some handles will be passed to the executor, it depends on the kind of function 
 
 A `Future` accepts an options object:
 
-|   Name   | Description                                                     |
-| :------: | :-------------------------------------------------------------- |
-| `signal` | accepts an `AbortSignal` object (is always passed to executors) |
+| Property  | Description                                                     |
+| :-------: | :-------------------------------------------------------------- |
+| `.signal` | accepts an `AbortSignal` object (is always passed to executors) |
 
 ## Structure
 
 A `Future` has exposed, **readonly** properties (the object itself remains extensible):
 
-|     Name     | Description                                                             |
+|   Property   | Description                                                             |
 | :----------: | :---------------------------------------------------------------------- |
 |   `.value`   | is the **settled** value of the underlying `Promise`                    |
 |  `abort()`   | is a reference to the method of an `AbortController`                    |
@@ -75,7 +75,7 @@ A `Future` has exposed, **readonly** properties (the object itself remains exten
 
 - if no `signal` was passed to the `Future` constructor, it is present but `undefined`.
   - this prevents accidental abort of other dependants when you only meant to abort the one `Future`;
-  - also `AbortSignal` has no reference to `AbortController.abort()`, so I can't grab it;
+  - also `AbortSignal` has no reference to `AbortController.abort()`, so I can't grab it.
 - once the `Future` is <ins>settled</ins>, it is `null` (for memory cleanup).
 - see [abort example](#signal-example)
 </details>
@@ -171,7 +171,7 @@ const cancelledFuture = new Future((res, rej, signal) => {
 
 try {
   cancelledFuture.abort(`I don't want this`);
-  log(await cancelledFuture);
+  console.log(await cancelledFuture);
 } catch (e) {
   console.log(e);
 }

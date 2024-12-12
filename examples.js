@@ -83,7 +83,7 @@ try {
   cancelledFetch.abort();
   log(await cancelledFetch);
 } catch (e) {
-  console.log(e);
+  log(e);
 }
 
 const control = new AbortController();
@@ -93,7 +93,7 @@ try {
   control.abort();
   log(await cancelledFetch2);
 } catch (e) {
-  console.log(e);
+  log(e);
 }
 
 debugger;
@@ -117,7 +117,7 @@ try {
   cancelledFuture.abort(`I don't want this`);
   log(await cancelledFuture);
 } catch (e) {
-  console.log(e);
+  log(e);
 }
 
 debugger;
