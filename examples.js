@@ -39,6 +39,7 @@ debugger;
 clear();
 
 const asResFunc = async (_, catColor, catAge) => {
+  log('called');
   return await new Promise((resolve) => {
     setTimeout(() => {
       resolve({ status: 200, catColor, catAge });

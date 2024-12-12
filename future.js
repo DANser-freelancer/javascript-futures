@@ -39,7 +39,7 @@ export default class Future extends Promise {
     }
 
     const source =
-      fn instanceof _async_proto
+      Object.getPrototypeOf(fn) === _async_proto
         ? fn(signal, ...rest)
         : new Promise((res, rej) => {
             fn(res, rej, signal, ...rest);

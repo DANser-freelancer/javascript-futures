@@ -187,6 +187,6 @@ try {
 <details>
 <summary>1.1.2 -> 2.0.0</summary>
 
-- improved natural/derived **async** function detection
+- improved natural **async** function detection
 - changed `<future>.v` to `<future>.value`
 </details>
